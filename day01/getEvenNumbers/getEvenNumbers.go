@@ -1,4 +1,4 @@
-package getEvenNumbers
+package getevennumbers
 
 import (
 	"strconv"
