@@ -4,6 +4,6 @@ import (
 	"SoftwareGoDay1/whatisyourname"
 )
 
-func main()  {
+func main() {
 	whatisyourname.WhatIsYourName()
 }
