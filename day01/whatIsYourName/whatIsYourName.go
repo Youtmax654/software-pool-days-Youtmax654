@@ -10,7 +10,7 @@ import (
 func WhatIsYourName() {
 	fmt.Println("What is your name ?")
 	fmt.Print("> ")
-	reader := bufio.NewReader((os.Stdin))
+	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
 	if err != nil {
 		log.Fatal(err)

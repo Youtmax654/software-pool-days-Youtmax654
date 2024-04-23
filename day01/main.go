@@ -1,9 +1,9 @@
 package main
 
 import (
-	"SoftwareGoDay1/whatisyourname"
+	"SoftwareGoDay1/artistsbook"
 )
 
 func main() {
-	whatisyourname.WhatIsYourName()
+	artistsbook.Router();
 }
