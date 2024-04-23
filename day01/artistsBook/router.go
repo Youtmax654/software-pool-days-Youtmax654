@@ -18,6 +18,7 @@ func Router() {
 	// Create a loop to keep the program running
 	for {
 		fmt.Print("\n> ")
+		// Read the user input
 		reader := bufio.NewReader(os.Stdin)
 		line, err := reader.ReadString('\n')
 
