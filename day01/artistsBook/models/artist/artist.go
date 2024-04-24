@@ -1,6 +1,7 @@
 package artist
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -11,4 +12,8 @@ type Artist struct {
 	Top  				 string 		`json:"top"`
 	Fans 				 int 				`json:"fans"`
 	ListenedTime time.Time 	`json:"listenedTime"`
+}
+
+func (a Artist) String() string {
+	return fmt.Sprintf("-- %s --\n", a.Name)
 }

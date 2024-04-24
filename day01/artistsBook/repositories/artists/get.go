@@ -9,7 +9,7 @@ import (
 )
 
 // get all the artists and return their names
-func GetAll() []string {
+func GetAll() []artist.Artist {
 	// read the json file that contains the artists
 	jsonFile, err := os.ReadFile("artistsBook/data/artists.json")
 	if err != nil {
@@ -34,11 +34,11 @@ func GetAll() []string {
 		return nil
 	}
 
-	var names []string
-	// get the names of the artists
-	for _, artist := range artists {
-		names = append(names, artist.Name)
-	}
+	// var names []string
+	// // get the names of the artists
+	// for _, artist := range artists {
+	// 	names = append(names, artist.Name)
+	// }
 
-	return names
+	return artists
 }
