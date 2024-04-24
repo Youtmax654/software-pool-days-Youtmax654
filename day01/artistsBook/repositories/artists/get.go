@@ -16,7 +16,7 @@ func GetAll() []string {
 		log.Fatal(err)
 	}
 
-	// Check if the json file is empty
+	// Check if the json is empty
 	if len(jsonFile) == 0 {
 		fmt.Println("\nYour list of favorite artists is empty. Add an artist to get started!")
 		return nil
@@ -26,6 +26,12 @@ func GetAll() []string {
 	// decode the json file into an array of artists
 	if err := json.Unmarshal(jsonFile, &artists); err != nil {
 		log.Fatal(err)
+	}
+	
+	// Check if the list is empty
+	if len(artists) == 0 {
+		fmt.Println("\nYour list of favorite artists is empty. Add an artist to get started!")
+		return nil
 	}
 
 	var names []string
