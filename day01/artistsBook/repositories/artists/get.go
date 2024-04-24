@@ -3,6 +3,7 @@ package artists
 import (
 	"SoftwareGoDay1/artistsBook/models/artist"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 )
@@ -13,6 +14,12 @@ func GetAll() []string {
 	jsonFile, err := os.ReadFile("artistsBook/data/artists.json")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Check if the json file is empty
+	if len(jsonFile) == 0 {
+		fmt.Println("\nYour list of favorite artists is empty. Add an artist to get started!")
+		return nil
 	}
 
 	var artists []artist.Artist

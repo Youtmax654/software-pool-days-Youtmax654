@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/aidarkhanov/nanoid"
 )
 
 // Add an artist to the list
@@ -16,14 +18,28 @@ func Create(name string) {
 		log.Fatal(err)
 	}
 
-	// Decode the json file into an array of artists
 	var artists []artist.Artist
-	if err := json.Unmarshal(jsonFile, &artists); err != nil {
-		log.Fatal(err)
-	}
+	
+	// Check if the json file is not empty
+	if (len(jsonFile) > 0) {
+		// Decode the json file into an array of artists
+		if err := json.Unmarshal(jsonFile, &artists); err != nil {
+			log.Fatal(err)
+		}
 
+		for _, artist := range artists {
+			if (artist.Name == name) {
+				fmt.Println()
+				fmt.Println(name, "is already in your favorite artists!")
+				return
+			}
+		}
+	}
+	
+	// Generate a unique id for the new artist
+	var id string = nanoid.New()
 	// Add the new artist to the array
-	artists = append(artists, artist.Artist{Name: name})
+	artists = append(artists, artist.Artist{Id: id, Name: name})
 
 	// Encode the array of artists into a json file
 	artistsJSON, err := json.Marshal(artists)
