@@ -8,22 +8,34 @@ import (
 	"os"
 )
 
-// Add an artist to the list
-func Create(name string) {
-	// Get all the artists
+func Delete(name string) {
 	jsonFile, err := os.ReadFile("artistsBook/data/artists.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Decode the json file into an array of artists
 	var artists []artist.Artist
+	// Decode the json file into an array of artists
 	if err := json.Unmarshal(jsonFile, &artists); err != nil {
 		log.Fatal(err)
 	}
 
-	// Add the new artist to the array
-	artists = append(artists, artist.Artist{Name: name})
+	var found bool
+	// Delete the artist
+	for i, artist := range artists {
+		if artist.Name == name {
+			// Append the artists before and after the artist to delete
+			artists = append(artists[:i], artists[i+1:]...)
+			found = true
+		}
+	}
+
+	// Check if the artist is in the favorite list
+	if !found {
+		fmt.Println()
+		fmt.Println(name, "is not in your favorite list.")
+		return
+	}
 
 	// Encode the array of artists into a json file
 	artistsJSON, err := json.Marshal(artists)
@@ -36,7 +48,6 @@ func Create(name string) {
 		log.Fatal(err)
 	}
 
-	// Display a message to confirm the artist has been added
 	fmt.Println()
-	fmt.Println(name, "has been added to your favorite artists!")
+	fmt.Println(name, "has been successfully deleted.")
 }

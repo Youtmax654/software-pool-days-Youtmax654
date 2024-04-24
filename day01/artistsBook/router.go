@@ -17,7 +17,8 @@ func Router() {
 		fmt.Println("1 - List my favorite artists")
 		fmt.Println("2 - Add an artist to my favorite")
 		fmt.Println("3 - Update an artist in my favorite")
-		fmt.Println("4 - Leave")
+		fmt.Println("4 - Delete an artist from my favorite")
+		fmt.Println("5 - Leave")
 
 		// Create a loop to keep the program running
 		for {
@@ -45,11 +46,14 @@ func Router() {
 				artists.Update()
 				break
 			} else if line == "4" {
+				artists.Delete()
+				break
+			} else if line == "5" {
 				fmt.Println("\nSee you!")
 				// Exit the loop
 				return
 			} else {
-				fmt.Println("\nTip 1, 2, 3 or 4.")
+				fmt.Println("\nTip 1, 2, 3, 4 or 5.")
 			}
 		}
 	}

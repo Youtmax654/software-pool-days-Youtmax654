@@ -63,3 +63,23 @@ func AskNewName() (string, string) {
 
 	return name, newName
 }
+
+func AskRemoveName() string {
+	// Ask the user for the artist's name to remove
+	fmt.Println("\nWhat's the name of the artist you want to remove?")
+	fmt.Print("\n> ")
+
+	// Read the user input for the artist's name
+	reader := bufio.NewReader(os.Stdin)
+	name, err := reader.ReadString('\n')
+
+	// Check if there is an error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Remove white spaces
+	name = strings.TrimSpace(name)
+
+	return name
+}

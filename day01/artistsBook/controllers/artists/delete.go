@@ -5,10 +5,10 @@ import (
 	vartists "SoftwareGoDay1/artistsBook/views/artists"
 )
 
-func Create() {
+func Delete() {
 	// Ask the user for the artist's name
-	name := vartists.AskName()
+	name := vartists.AskRemoveName()
 
-	// Call the repository to create the artist
-	rartists.Create(name)
+	// Delete the artist
+	rartists.Delete(name)
 }
