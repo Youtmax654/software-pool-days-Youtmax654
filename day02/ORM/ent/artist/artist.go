@@ -4,6 +4,7 @@ package artist
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -16,8 +17,17 @@ const (
 	FieldName = "name"
 	// FieldNationality holds the string denoting the nationality field in the database.
 	FieldNationality = "nationality"
+	// EdgeContact holds the string denoting the contact edge name in mutations.
+	EdgeContact = "contact"
 	// Table holds the table name of the artist in the database.
 	Table = "artists"
+	// ContactTable is the table that holds the contact relation/edge.
+	ContactTable = "contacts"
+	// ContactInverseTable is the table name for the Contact entity.
+	// It exists in this package in order to avoid circular dependency with the "contact" package.
+	ContactInverseTable = "contacts"
+	// ContactColumn is the table column denoting the contact relation/edge.
+	ContactColumn = "artist_contact"
 )
 
 // Columns holds all SQL columns for artist fields.
@@ -58,4 +68,18 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByNationality orders the results by the nationality field.
 func ByNationality(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNationality, opts...).ToFunc()
+}
+
+// ByContactField orders the results by contact field.
+func ByContactField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newContactStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newContactStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ContactInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, false, ContactTable, ContactColumn),
+	)
 }

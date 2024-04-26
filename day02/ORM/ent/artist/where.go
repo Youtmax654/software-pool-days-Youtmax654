@@ -6,6 +6,7 @@ import (
 	"SoftwareGoDay2/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/google/uuid"
 )
 
@@ -192,6 +193,29 @@ func NationalityEqualFold(v string) predicate.Artist {
 // NationalityContainsFold applies the ContainsFold predicate on the "nationality" field.
 func NationalityContainsFold(v string) predicate.Artist {
 	return predicate.Artist(sql.FieldContainsFold(FieldNationality, v))
+}
+
+// HasContact applies the HasEdge predicate on the "contact" edge.
+func HasContact() predicate.Artist {
+	return predicate.Artist(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, ContactTable, ContactColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasContactWith applies the HasEdge predicate on the "contact" edge with a given conditions (other predicates).
+func HasContactWith(preds ...predicate.Contact) predicate.Artist {
+	return predicate.Artist(func(s *sql.Selector) {
+		step := newContactStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"SoftwareGoDay2/ent/artist"
+	"SoftwareGoDay2/ent/contact"
 	"SoftwareGoDay2/ent/predicate"
 	"context"
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ArtistUpdate is the builder for updating Artist entities.
@@ -55,9 +57,34 @@ func (au *ArtistUpdate) SetNillableNationality(s *string) *ArtistUpdate {
 	return au
 }
 
+// SetContactID sets the "contact" edge to the Contact entity by ID.
+func (au *ArtistUpdate) SetContactID(id uuid.UUID) *ArtistUpdate {
+	au.mutation.SetContactID(id)
+	return au
+}
+
+// SetNillableContactID sets the "contact" edge to the Contact entity by ID if the given value is not nil.
+func (au *ArtistUpdate) SetNillableContactID(id *uuid.UUID) *ArtistUpdate {
+	if id != nil {
+		au = au.SetContactID(*id)
+	}
+	return au
+}
+
+// SetContact sets the "contact" edge to the Contact entity.
+func (au *ArtistUpdate) SetContact(c *Contact) *ArtistUpdate {
+	return au.SetContactID(c.ID)
+}
+
 // Mutation returns the ArtistMutation object of the builder.
 func (au *ArtistUpdate) Mutation() *ArtistMutation {
 	return au.mutation
+}
+
+// ClearContact clears the "contact" edge to the Contact entity.
+func (au *ArtistUpdate) ClearContact() *ArtistUpdate {
+	au.mutation.ClearContact()
+	return au
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -101,6 +128,35 @@ func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := au.mutation.Nationality(); ok {
 		_spec.SetField(artist.FieldNationality, field.TypeString, value)
+	}
+	if au.mutation.ContactCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   artist.ContactTable,
+			Columns: []string{artist.ContactColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(contact.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.ContactIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   artist.ContactTable,
+			Columns: []string{artist.ContactColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(contact.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -150,9 +206,34 @@ func (auo *ArtistUpdateOne) SetNillableNationality(s *string) *ArtistUpdateOne {
 	return auo
 }
 
+// SetContactID sets the "contact" edge to the Contact entity by ID.
+func (auo *ArtistUpdateOne) SetContactID(id uuid.UUID) *ArtistUpdateOne {
+	auo.mutation.SetContactID(id)
+	return auo
+}
+
+// SetNillableContactID sets the "contact" edge to the Contact entity by ID if the given value is not nil.
+func (auo *ArtistUpdateOne) SetNillableContactID(id *uuid.UUID) *ArtistUpdateOne {
+	if id != nil {
+		auo = auo.SetContactID(*id)
+	}
+	return auo
+}
+
+// SetContact sets the "contact" edge to the Contact entity.
+func (auo *ArtistUpdateOne) SetContact(c *Contact) *ArtistUpdateOne {
+	return auo.SetContactID(c.ID)
+}
+
 // Mutation returns the ArtistMutation object of the builder.
 func (auo *ArtistUpdateOne) Mutation() *ArtistMutation {
 	return auo.mutation
+}
+
+// ClearContact clears the "contact" edge to the Contact entity.
+func (auo *ArtistUpdateOne) ClearContact() *ArtistUpdateOne {
+	auo.mutation.ClearContact()
+	return auo
 }
 
 // Where appends a list predicates to the ArtistUpdate builder.
@@ -226,6 +307,35 @@ func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err err
 	}
 	if value, ok := auo.mutation.Nationality(); ok {
 		_spec.SetField(artist.FieldNationality, field.TypeString, value)
+	}
+	if auo.mutation.ContactCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   artist.ContactTable,
+			Columns: []string{artist.ContactColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(contact.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.ContactIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   artist.ContactTable,
+			Columns: []string{artist.ContactColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(contact.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Artist{config: auo.config}
 	_spec.Assign = _node.assignValues

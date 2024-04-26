@@ -4,6 +4,7 @@ package ent
 
 import (
 	"SoftwareGoDay2/ent/artist"
+	"SoftwareGoDay2/ent/contact"
 	"context"
 	"errors"
 	"fmt"
@@ -73,7 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			artist.Table: artist.ValidColumn,
+			artist.Table:  artist.ValidColumn,
+			contact.Table: contact.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

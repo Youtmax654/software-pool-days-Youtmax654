@@ -4,6 +4,7 @@ package ent
 
 import (
 	"SoftwareGoDay2/ent/artist"
+	"SoftwareGoDay2/ent/contact"
 	"context"
 	"errors"
 	"fmt"
@@ -44,6 +45,25 @@ func (ac *ArtistCreate) SetNillableID(u *uuid.UUID) *ArtistCreate {
 		ac.SetID(*u)
 	}
 	return ac
+}
+
+// SetContactID sets the "contact" edge to the Contact entity by ID.
+func (ac *ArtistCreate) SetContactID(id uuid.UUID) *ArtistCreate {
+	ac.mutation.SetContactID(id)
+	return ac
+}
+
+// SetNillableContactID sets the "contact" edge to the Contact entity by ID if the given value is not nil.
+func (ac *ArtistCreate) SetNillableContactID(id *uuid.UUID) *ArtistCreate {
+	if id != nil {
+		ac = ac.SetContactID(*id)
+	}
+	return ac
+}
+
+// SetContact sets the "contact" edge to the Contact entity.
+func (ac *ArtistCreate) SetContact(c *Contact) *ArtistCreate {
+	return ac.SetContactID(c.ID)
 }
 
 // Mutation returns the ArtistMutation object of the builder.
@@ -137,6 +157,22 @@ func (ac *ArtistCreate) createSpec() (*Artist, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Nationality(); ok {
 		_spec.SetField(artist.FieldNationality, field.TypeString, value)
 		_node.Nationality = value
+	}
+	if nodes := ac.mutation.ContactIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: false,
+			Table:   artist.ContactTable,
+			Columns: []string{artist.ContactColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(contact.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

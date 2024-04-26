@@ -8,3 +8,6 @@ import (
 
 // Artist is the predicate function for artist builders.
 type Artist func(*sql.Selector)
+
+// Contact is the predicate function for contact builders.
+type Contact func(*sql.Selector)

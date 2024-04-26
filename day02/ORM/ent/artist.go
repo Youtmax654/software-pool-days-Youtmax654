@@ -4,6 +4,7 @@ package ent
 
 import (
 	"SoftwareGoDay2/ent/artist"
+	"SoftwareGoDay2/ent/contact"
 	"fmt"
 	"strings"
 
@@ -20,8 +21,31 @@ type Artist struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Nationality holds the value of the "nationality" field.
-	Nationality  string `json:"nationality,omitempty"`
+	Nationality string `json:"nationality,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the ArtistQuery when eager-loading is set.
+	Edges        ArtistEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// ArtistEdges holds the relations/edges for other nodes in the graph.
+type ArtistEdges struct {
+	// Contact holds the value of the contact edge.
+	Contact *Contact `json:"contact,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// ContactOrErr returns the Contact value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ArtistEdges) ContactOrErr() (*Contact, error) {
+	if e.Contact != nil {
+		return e.Contact, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: contact.Label}
+	}
+	return nil, &NotLoadedError{edge: "contact"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -77,6 +101,11 @@ func (a *Artist) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (a *Artist) Value(name string) (ent.Value, error) {
 	return a.selectValues.Get(name)
+}
+
+// QueryContact queries the "contact" edge of the Artist entity.
+func (a *Artist) QueryContact() *ContactQuery {
+	return NewArtistClient(a.config).QueryContact(a)
 }
 
 // Update returns a builder for updating this Artist.

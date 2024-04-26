@@ -20,11 +20,34 @@ var (
 		Columns:    ArtistsColumns,
 		PrimaryKey: []*schema.Column{ArtistsColumns[0]},
 	}
+	// ContactsColumns holds the columns for the "contacts" table.
+	ContactsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "email", Type: field.TypeString},
+		{Name: "phone", Type: field.TypeString},
+		{Name: "artist_contact", Type: field.TypeUUID, Unique: true, Nullable: true},
+	}
+	// ContactsTable holds the schema information for the "contacts" table.
+	ContactsTable = &schema.Table{
+		Name:       "contacts",
+		Columns:    ContactsColumns,
+		PrimaryKey: []*schema.Column{ContactsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "contacts_artists_contact",
+				Columns:    []*schema.Column{ContactsColumns[3]},
+				RefColumns: []*schema.Column{ArtistsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ArtistsTable,
+		ContactsTable,
 	}
 )
 
 func init() {
+	ContactsTable.ForeignKeys[0].RefTable = ArtistsTable
 }

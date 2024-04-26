@@ -4,6 +4,7 @@ package ent
 
 import (
 	"SoftwareGoDay2/ent/artist"
+	"SoftwareGoDay2/ent/contact"
 	"SoftwareGoDay2/ent/schema"
 
 	"github.com/google/uuid"
@@ -19,4 +20,10 @@ func init() {
 	artistDescID := artistFields[0].Descriptor()
 	// artist.DefaultID holds the default value on creation for the id field.
 	artist.DefaultID = artistDescID.Default.(func() uuid.UUID)
+	contactFields := schema.Contact{}.Fields()
+	_ = contactFields
+	// contactDescID is the schema descriptor for id field.
+	contactDescID := contactFields[0].Descriptor()
+	// contact.DefaultID holds the default value on creation for the id field.
+	contact.DefaultID = contactDescID.Default.(func() uuid.UUID)
 }

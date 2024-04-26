@@ -11,7 +11,7 @@ import (
 
 var InvalidArtistName = errors.New("artist name is invalid")
 
-func (c Controller) CreateArtist(ctx context.Context, name string, nationality string) (*ent.Artist, error) {
+func (c Controller) CreateArtist(ctx context.Context, name, nationality string) (*ent.Artist, error) {
 	// Check if the name is empty
 	if name == "" {
 		return nil, InvalidArtistName

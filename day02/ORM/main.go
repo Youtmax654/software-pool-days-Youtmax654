@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -29,11 +30,16 @@ func main() {
 
 	ctx := context.Background()
 
-	if client != nil {
-		artist, _ := client.CreateArtist(ctx, "Florida_Test", "")
-		log.Printf("Artist created: %v", artist)
-
-		updated, _ := client.UpdateArtist(ctx, &ent.Artist{ID: artist.ID, Name: "Florida_Test", Nationality: "us"})
-		log.Printf("Artist updated: %v", updated)
+	var contact *ent.Contact = &ent.Contact{
+		ID: uuid.New(),
+		Email: "youtmax654@email.com",
+		Phone: "1234567890",
 	}
+
+	update, err := client.UpdateContact(ctx, contact)
+	if err != nil {
+		log.Printf("Failed to update contact: %v", err)
+	}
+
+	log.Printf("Updated contact: %v", update)
 }
