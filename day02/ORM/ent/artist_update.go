@@ -88,7 +88,7 @@ func (au *ArtistUpdate) ExecX(ctx context.Context) {
 }
 
 func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(artist.Table, artist.Columns, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(artist.Table, artist.Columns, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeUUID))
 	if ps := au.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -196,7 +196,7 @@ func (auo *ArtistUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err error) {
-	_spec := sqlgraph.NewUpdateSpec(artist.Table, artist.Columns, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(artist.Table, artist.Columns, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeUUID))
 	id, ok := auo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Artist.id" for update`)}

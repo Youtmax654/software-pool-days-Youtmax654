@@ -10,7 +10,7 @@ import (
 var (
 	// ArtistsColumns holds the columns for the "artists" table.
 	ArtistsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeUUID},
 		{Name: "name", Type: field.TypeString},
 		{Name: "nationality", Type: field.TypeString},
 	}

@@ -2,8 +2,21 @@
 
 package ent
 
+import (
+	"SoftwareGoDay2/ent/artist"
+	"SoftwareGoDay2/ent/schema"
+
+	"github.com/google/uuid"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	artistFields := schema.Artist{}.Fields()
+	_ = artistFields
+	// artistDescID is the schema descriptor for id field.
+	artistDescID := artistFields[0].Descriptor()
+	// artist.DefaultID holds the default value on creation for the id field.
+	artist.DefaultID = artistDescID.Default.(func() uuid.UUID)
 }

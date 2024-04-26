@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ArtistCreate is the builder for creating a Artist entity.
@@ -31,6 +32,20 @@ func (ac *ArtistCreate) SetNationality(s string) *ArtistCreate {
 	return ac
 }
 
+// SetID sets the "id" field.
+func (ac *ArtistCreate) SetID(u uuid.UUID) *ArtistCreate {
+	ac.mutation.SetID(u)
+	return ac
+}
+
+// SetNillableID sets the "id" field if the given value is not nil.
+func (ac *ArtistCreate) SetNillableID(u *uuid.UUID) *ArtistCreate {
+	if u != nil {
+		ac.SetID(*u)
+	}
+	return ac
+}
+
 // Mutation returns the ArtistMutation object of the builder.
 func (ac *ArtistCreate) Mutation() *ArtistMutation {
 	return ac.mutation
@@ -38,6 +53,7 @@ func (ac *ArtistCreate) Mutation() *ArtistMutation {
 
 // Save creates the Artist in the database.
 func (ac *ArtistCreate) Save(ctx context.Context) (*Artist, error) {
+	ac.defaults()
 	return withHooks(ctx, ac.sqlSave, ac.mutation, ac.hooks)
 }
 
@@ -63,6 +79,14 @@ func (ac *ArtistCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (ac *ArtistCreate) defaults() {
+	if _, ok := ac.mutation.ID(); !ok {
+		v := artist.DefaultID()
+		ac.mutation.SetID(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (ac *ArtistCreate) check() error {
 	if _, ok := ac.mutation.Name(); !ok {
@@ -85,8 +109,13 @@ func (ac *ArtistCreate) sqlSave(ctx context.Context) (*Artist, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
+			_node.ID = *id
+		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
+			return nil, err
+		}
+	}
 	ac.mutation.id = &_node.ID
 	ac.mutation.done = true
 	return _node, nil
@@ -95,8 +124,12 @@ func (ac *ArtistCreate) sqlSave(ctx context.Context) (*Artist, error) {
 func (ac *ArtistCreate) createSpec() (*Artist, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Artist{config: ac.config}
-		_spec = sqlgraph.NewCreateSpec(artist.Table, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(artist.Table, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeUUID))
 	)
+	if id, ok := ac.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = &id
+	}
 	if value, ok := ac.mutation.Name(); ok {
 		_spec.SetField(artist.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -126,6 +159,7 @@ func (acb *ArtistCreateBulk) Save(ctx context.Context) ([]*Artist, error) {
 	for i := range acb.builders {
 		func(i int, root context.Context) {
 			builder := acb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ArtistMutation)
 				if !ok {
@@ -152,10 +186,6 @@ func (acb *ArtistCreateBulk) Save(ctx context.Context) ([]*Artist, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

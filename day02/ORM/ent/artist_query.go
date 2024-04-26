@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/google/uuid"
 )
 
 // ArtistQuery is the builder for querying Artist entities.
@@ -81,8 +82,8 @@ func (aq *ArtistQuery) FirstX(ctx context.Context) *Artist {
 
 // FirstID returns the first Artist ID from the query.
 // Returns a *NotFoundError when no Artist ID was found.
-func (aq *ArtistQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (aq *ArtistQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = aq.Limit(1).IDs(setContextOp(ctx, aq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +95,7 @@ func (aq *ArtistQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (aq *ArtistQuery) FirstIDX(ctx context.Context) int {
+func (aq *ArtistQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := aq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +133,8 @@ func (aq *ArtistQuery) OnlyX(ctx context.Context) *Artist {
 // OnlyID is like Only, but returns the only Artist ID in the query.
 // Returns a *NotSingularError when more than one Artist ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (aq *ArtistQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (aq *ArtistQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+	var ids []uuid.UUID
 	if ids, err = aq.Limit(2).IDs(setContextOp(ctx, aq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +150,7 @@ func (aq *ArtistQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (aq *ArtistQuery) OnlyIDX(ctx context.Context) int {
+func (aq *ArtistQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := aq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +178,7 @@ func (aq *ArtistQuery) AllX(ctx context.Context) []*Artist {
 }
 
 // IDs executes the query and returns a list of Artist IDs.
-func (aq *ArtistQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (aq *ArtistQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if aq.ctx.Unique == nil && aq.path != nil {
 		aq.Unique(true)
 	}
@@ -189,7 +190,7 @@ func (aq *ArtistQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (aq *ArtistQuery) IDsX(ctx context.Context) []int {
+func (aq *ArtistQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := aq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -364,7 +365,7 @@ func (aq *ArtistQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (aq *ArtistQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(artist.Table, artist.Columns, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(artist.Table, artist.Columns, sqlgraph.NewFieldSpec(artist.FieldID, field.TypeUUID))
 	_spec.From = aq.sql
 	if unique := aq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
