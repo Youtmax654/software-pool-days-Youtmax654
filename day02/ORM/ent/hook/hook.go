@@ -32,6 +32,18 @@ func (f ContactFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ContactMutation", m)
 }
 
+// The RecordCompanyFunc type is an adapter to allow the use of ordinary
+// function as RecordCompany mutator.
+type RecordCompanyFunc func(context.Context, *ent.RecordCompanyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RecordCompanyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RecordCompanyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RecordCompanyMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

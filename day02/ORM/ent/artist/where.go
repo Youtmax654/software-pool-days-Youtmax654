@@ -218,6 +218,29 @@ func HasContactWith(preds ...predicate.Contact) predicate.Artist {
 	})
 }
 
+// HasRecordcompanies applies the HasEdge predicate on the "recordcompanies" edge.
+func HasRecordcompanies() predicate.Artist {
+	return predicate.Artist(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, RecordcompaniesTable, RecordcompaniesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasRecordcompaniesWith applies the HasEdge predicate on the "recordcompanies" edge with a given conditions (other predicates).
+func HasRecordcompaniesWith(preds ...predicate.RecordCompany) predicate.Artist {
+	return predicate.Artist(func(s *sql.Selector) {
+		step := newRecordcompaniesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Artist) predicate.Artist {
 	return predicate.Artist(sql.AndPredicates(predicates...))

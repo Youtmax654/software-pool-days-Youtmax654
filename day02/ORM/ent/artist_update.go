@@ -6,6 +6,7 @@ import (
 	"SoftwareGoDay2/ent/artist"
 	"SoftwareGoDay2/ent/contact"
 	"SoftwareGoDay2/ent/predicate"
+	"SoftwareGoDay2/ent/recordcompany"
 	"context"
 	"errors"
 	"fmt"
@@ -76,6 +77,25 @@ func (au *ArtistUpdate) SetContact(c *Contact) *ArtistUpdate {
 	return au.SetContactID(c.ID)
 }
 
+// SetRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by ID.
+func (au *ArtistUpdate) SetRecordcompaniesID(id uuid.UUID) *ArtistUpdate {
+	au.mutation.SetRecordcompaniesID(id)
+	return au
+}
+
+// SetNillableRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by ID if the given value is not nil.
+func (au *ArtistUpdate) SetNillableRecordcompaniesID(id *uuid.UUID) *ArtistUpdate {
+	if id != nil {
+		au = au.SetRecordcompaniesID(*id)
+	}
+	return au
+}
+
+// SetRecordcompanies sets the "recordcompanies" edge to the RecordCompany entity.
+func (au *ArtistUpdate) SetRecordcompanies(r *RecordCompany) *ArtistUpdate {
+	return au.SetRecordcompaniesID(r.ID)
+}
+
 // Mutation returns the ArtistMutation object of the builder.
 func (au *ArtistUpdate) Mutation() *ArtistMutation {
 	return au.mutation
@@ -84,6 +104,12 @@ func (au *ArtistUpdate) Mutation() *ArtistMutation {
 // ClearContact clears the "contact" edge to the Contact entity.
 func (au *ArtistUpdate) ClearContact() *ArtistUpdate {
 	au.mutation.ClearContact()
+	return au
+}
+
+// ClearRecordcompanies clears the "recordcompanies" edge to the RecordCompany entity.
+func (au *ArtistUpdate) ClearRecordcompanies() *ArtistUpdate {
+	au.mutation.ClearRecordcompanies()
 	return au
 }
 
@@ -158,6 +184,35 @@ func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.RecordcompaniesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   artist.RecordcompaniesTable,
+			Columns: []string{artist.RecordcompaniesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(recordcompany.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RecordcompaniesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   artist.RecordcompaniesTable,
+			Columns: []string{artist.RecordcompaniesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(recordcompany.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{artist.Label}
@@ -225,6 +280,25 @@ func (auo *ArtistUpdateOne) SetContact(c *Contact) *ArtistUpdateOne {
 	return auo.SetContactID(c.ID)
 }
 
+// SetRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by ID.
+func (auo *ArtistUpdateOne) SetRecordcompaniesID(id uuid.UUID) *ArtistUpdateOne {
+	auo.mutation.SetRecordcompaniesID(id)
+	return auo
+}
+
+// SetNillableRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by ID if the given value is not nil.
+func (auo *ArtistUpdateOne) SetNillableRecordcompaniesID(id *uuid.UUID) *ArtistUpdateOne {
+	if id != nil {
+		auo = auo.SetRecordcompaniesID(*id)
+	}
+	return auo
+}
+
+// SetRecordcompanies sets the "recordcompanies" edge to the RecordCompany entity.
+func (auo *ArtistUpdateOne) SetRecordcompanies(r *RecordCompany) *ArtistUpdateOne {
+	return auo.SetRecordcompaniesID(r.ID)
+}
+
 // Mutation returns the ArtistMutation object of the builder.
 func (auo *ArtistUpdateOne) Mutation() *ArtistMutation {
 	return auo.mutation
@@ -233,6 +307,12 @@ func (auo *ArtistUpdateOne) Mutation() *ArtistMutation {
 // ClearContact clears the "contact" edge to the Contact entity.
 func (auo *ArtistUpdateOne) ClearContact() *ArtistUpdateOne {
 	auo.mutation.ClearContact()
+	return auo
+}
+
+// ClearRecordcompanies clears the "recordcompanies" edge to the RecordCompany entity.
+func (auo *ArtistUpdateOne) ClearRecordcompanies() *ArtistUpdateOne {
+	auo.mutation.ClearRecordcompanies()
 	return auo
 }
 
@@ -330,6 +410,35 @@ func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(contact.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.RecordcompaniesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   artist.RecordcompaniesTable,
+			Columns: []string{artist.RecordcompaniesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(recordcompany.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RecordcompaniesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   artist.RecordcompaniesTable,
+			Columns: []string{artist.RecordcompaniesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(recordcompany.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

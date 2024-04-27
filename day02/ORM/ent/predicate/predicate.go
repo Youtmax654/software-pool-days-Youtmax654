@@ -11,3 +11,6 @@ type Artist func(*sql.Selector)
 
 // Contact is the predicate function for contact builders.
 type Contact func(*sql.Selector)
+
+// RecordCompany is the predicate function for recordcompany builders.
+type RecordCompany func(*sql.Selector)

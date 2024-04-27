@@ -5,6 +5,7 @@ package ent
 import (
 	"SoftwareGoDay2/ent/artist"
 	"SoftwareGoDay2/ent/contact"
+	"SoftwareGoDay2/ent/recordcompany"
 	"fmt"
 	"strings"
 
@@ -24,17 +25,20 @@ type Artist struct {
 	Nationality string `json:"nationality,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ArtistQuery when eager-loading is set.
-	Edges        ArtistEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                  ArtistEdges `json:"edges"`
+	record_company_artists *uuid.UUID
+	selectValues           sql.SelectValues
 }
 
 // ArtistEdges holds the relations/edges for other nodes in the graph.
 type ArtistEdges struct {
 	// Contact holds the value of the contact edge.
 	Contact *Contact `json:"contact,omitempty"`
+	// Recordcompanies holds the value of the recordcompanies edge.
+	Recordcompanies *RecordCompany `json:"recordcompanies,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ContactOrErr returns the Contact value or an error if the edge
@@ -48,6 +52,17 @@ func (e ArtistEdges) ContactOrErr() (*Contact, error) {
 	return nil, &NotLoadedError{edge: "contact"}
 }
 
+// RecordcompaniesOrErr returns the Recordcompanies value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ArtistEdges) RecordcompaniesOrErr() (*RecordCompany, error) {
+	if e.Recordcompanies != nil {
+		return e.Recordcompanies, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: recordcompany.Label}
+	}
+	return nil, &NotLoadedError{edge: "recordcompanies"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Artist) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -57,6 +72,8 @@ func (*Artist) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case artist.FieldID:
 			values[i] = new(uuid.UUID)
+		case artist.ForeignKeys[0]: // record_company_artists
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -90,6 +107,13 @@ func (a *Artist) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.Nationality = value.String
 			}
+		case artist.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field record_company_artists", values[i])
+			} else if value.Valid {
+				a.record_company_artists = new(uuid.UUID)
+				*a.record_company_artists = *value.S.(*uuid.UUID)
+			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
 		}
@@ -106,6 +130,11 @@ func (a *Artist) Value(name string) (ent.Value, error) {
 // QueryContact queries the "contact" edge of the Artist entity.
 func (a *Artist) QueryContact() *ContactQuery {
 	return NewArtistClient(a.config).QueryContact(a)
+}
+
+// QueryRecordcompanies queries the "recordcompanies" edge of the Artist entity.
+func (a *Artist) QueryRecordcompanies() *RecordCompanyQuery {
+	return NewArtistClient(a.config).QueryRecordcompanies(a)
 }
 
 // Update returns a builder for updating this Artist.

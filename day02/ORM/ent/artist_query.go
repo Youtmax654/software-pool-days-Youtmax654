@@ -6,6 +6,7 @@ import (
 	"SoftwareGoDay2/ent/artist"
 	"SoftwareGoDay2/ent/contact"
 	"SoftwareGoDay2/ent/predicate"
+	"SoftwareGoDay2/ent/recordcompany"
 	"context"
 	"database/sql/driver"
 	"fmt"
@@ -20,11 +21,13 @@ import (
 // ArtistQuery is the builder for querying Artist entities.
 type ArtistQuery struct {
 	config
-	ctx         *QueryContext
-	order       []artist.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Artist
-	withContact *ContactQuery
+	ctx                 *QueryContext
+	order               []artist.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.Artist
+	withContact         *ContactQuery
+	withRecordcompanies *RecordCompanyQuery
+	withFKs             bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,28 @@ func (aq *ArtistQuery) QueryContact() *ContactQuery {
 			sqlgraph.From(artist.Table, artist.FieldID, selector),
 			sqlgraph.To(contact.Table, contact.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, artist.ContactTable, artist.ContactColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRecordcompanies chains the current query on the "recordcompanies" edge.
+func (aq *ArtistQuery) QueryRecordcompanies() *RecordCompanyQuery {
+	query := (&RecordCompanyClient{config: aq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(artist.Table, artist.FieldID, selector),
+			sqlgraph.To(recordcompany.Table, recordcompany.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, artist.RecordcompaniesTable, artist.RecordcompaniesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +295,13 @@ func (aq *ArtistQuery) Clone() *ArtistQuery {
 		return nil
 	}
 	return &ArtistQuery{
-		config:      aq.config,
-		ctx:         aq.ctx.Clone(),
-		order:       append([]artist.OrderOption{}, aq.order...),
-		inters:      append([]Interceptor{}, aq.inters...),
-		predicates:  append([]predicate.Artist{}, aq.predicates...),
-		withContact: aq.withContact.Clone(),
+		config:              aq.config,
+		ctx:                 aq.ctx.Clone(),
+		order:               append([]artist.OrderOption{}, aq.order...),
+		inters:              append([]Interceptor{}, aq.inters...),
+		predicates:          append([]predicate.Artist{}, aq.predicates...),
+		withContact:         aq.withContact.Clone(),
+		withRecordcompanies: aq.withRecordcompanies.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -290,6 +316,17 @@ func (aq *ArtistQuery) WithContact(opts ...func(*ContactQuery)) *ArtistQuery {
 		opt(query)
 	}
 	aq.withContact = query
+	return aq
+}
+
+// WithRecordcompanies tells the query-builder to eager-load the nodes that are connected to
+// the "recordcompanies" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *ArtistQuery) WithRecordcompanies(opts ...func(*RecordCompanyQuery)) *ArtistQuery {
+	query := (&RecordCompanyClient{config: aq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withRecordcompanies = query
 	return aq
 }
 
@@ -370,11 +407,19 @@ func (aq *ArtistQuery) prepareQuery(ctx context.Context) error {
 func (aq *ArtistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Artist, error) {
 	var (
 		nodes       = []*Artist{}
+		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			aq.withContact != nil,
+			aq.withRecordcompanies != nil,
 		}
 	)
+	if aq.withRecordcompanies != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, artist.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Artist).scanValues(nil, columns)
 	}
@@ -396,6 +441,12 @@ func (aq *ArtistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Artis
 	if query := aq.withContact; query != nil {
 		if err := aq.loadContact(ctx, query, nodes, nil,
 			func(n *Artist, e *Contact) { n.Edges.Contact = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := aq.withRecordcompanies; query != nil {
+		if err := aq.loadRecordcompanies(ctx, query, nodes, nil,
+			func(n *Artist, e *RecordCompany) { n.Edges.Recordcompanies = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -427,6 +478,38 @@ func (aq *ArtistQuery) loadContact(ctx context.Context, query *ContactQuery, nod
 			return fmt.Errorf(`unexpected referenced foreign-key "artist_contact" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (aq *ArtistQuery) loadRecordcompanies(ctx context.Context, query *RecordCompanyQuery, nodes []*Artist, init func(*Artist), assign func(*Artist, *RecordCompany)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Artist)
+	for i := range nodes {
+		if nodes[i].record_company_artists == nil {
+			continue
+		}
+		fk := *nodes[i].record_company_artists
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(recordcompany.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "record_company_artists" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

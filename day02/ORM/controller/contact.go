@@ -73,7 +73,7 @@ func (c Controller) UpdateContact(ctx context.Context, id, email, phone string) 
 	// Get the contact by ID
 	contact, err := c.GetContactByID(ctx, id)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get contact by ID")
+		return nil, errors.New("ent: artist not found")
 	}
 
 	if contact != nil {

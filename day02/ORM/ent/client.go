@@ -13,6 +13,7 @@ import (
 
 	"SoftwareGoDay2/ent/artist"
 	"SoftwareGoDay2/ent/contact"
+	"SoftwareGoDay2/ent/recordcompany"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -30,6 +31,8 @@ type Client struct {
 	Artist *ArtistClient
 	// Contact is the client for interacting with the Contact builders.
 	Contact *ContactClient
+	// RecordCompany is the client for interacting with the RecordCompany builders.
+	RecordCompany *RecordCompanyClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -43,6 +46,7 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Artist = NewArtistClient(c.config)
 	c.Contact = NewContactClient(c.config)
+	c.RecordCompany = NewRecordCompanyClient(c.config)
 }
 
 type (
@@ -133,10 +137,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Artist:  NewArtistClient(cfg),
-		Contact: NewContactClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Artist:        NewArtistClient(cfg),
+		Contact:       NewContactClient(cfg),
+		RecordCompany: NewRecordCompanyClient(cfg),
 	}, nil
 }
 
@@ -154,10 +159,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:     ctx,
-		config:  cfg,
-		Artist:  NewArtistClient(cfg),
-		Contact: NewContactClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Artist:        NewArtistClient(cfg),
+		Contact:       NewContactClient(cfg),
+		RecordCompany: NewRecordCompanyClient(cfg),
 	}, nil
 }
 
@@ -188,6 +194,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Artist.Use(hooks...)
 	c.Contact.Use(hooks...)
+	c.RecordCompany.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
@@ -195,6 +202,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Artist.Intercept(interceptors...)
 	c.Contact.Intercept(interceptors...)
+	c.RecordCompany.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -204,6 +212,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Artist.mutate(ctx, m)
 	case *ContactMutation:
 		return c.Contact.mutate(ctx, m)
+	case *RecordCompanyMutation:
+		return c.RecordCompany.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -326,6 +336,22 @@ func (c *ArtistClient) QueryContact(a *Artist) *ContactQuery {
 			sqlgraph.From(artist.Table, artist.FieldID, id),
 			sqlgraph.To(contact.Table, contact.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, artist.ContactTable, artist.ContactColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRecordcompanies queries the recordcompanies edge of a Artist.
+func (c *ArtistClient) QueryRecordcompanies(a *Artist) *RecordCompanyQuery {
+	query := (&RecordCompanyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(artist.Table, artist.FieldID, id),
+			sqlgraph.To(recordcompany.Table, recordcompany.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, artist.RecordcompaniesTable, artist.RecordcompaniesColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -507,12 +533,161 @@ func (c *ContactClient) mutate(ctx context.Context, m *ContactMutation) (Value, 
 	}
 }
 
+// RecordCompanyClient is a client for the RecordCompany schema.
+type RecordCompanyClient struct {
+	config
+}
+
+// NewRecordCompanyClient returns a client for the RecordCompany from the given config.
+func NewRecordCompanyClient(c config) *RecordCompanyClient {
+	return &RecordCompanyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `recordcompany.Hooks(f(g(h())))`.
+func (c *RecordCompanyClient) Use(hooks ...Hook) {
+	c.hooks.RecordCompany = append(c.hooks.RecordCompany, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `recordcompany.Intercept(f(g(h())))`.
+func (c *RecordCompanyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.RecordCompany = append(c.inters.RecordCompany, interceptors...)
+}
+
+// Create returns a builder for creating a RecordCompany entity.
+func (c *RecordCompanyClient) Create() *RecordCompanyCreate {
+	mutation := newRecordCompanyMutation(c.config, OpCreate)
+	return &RecordCompanyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of RecordCompany entities.
+func (c *RecordCompanyClient) CreateBulk(builders ...*RecordCompanyCreate) *RecordCompanyCreateBulk {
+	return &RecordCompanyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RecordCompanyClient) MapCreateBulk(slice any, setFunc func(*RecordCompanyCreate, int)) *RecordCompanyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RecordCompanyCreateBulk{err: fmt.Errorf("calling to RecordCompanyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RecordCompanyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RecordCompanyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for RecordCompany.
+func (c *RecordCompanyClient) Update() *RecordCompanyUpdate {
+	mutation := newRecordCompanyMutation(c.config, OpUpdate)
+	return &RecordCompanyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RecordCompanyClient) UpdateOne(rc *RecordCompany) *RecordCompanyUpdateOne {
+	mutation := newRecordCompanyMutation(c.config, OpUpdateOne, withRecordCompany(rc))
+	return &RecordCompanyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RecordCompanyClient) UpdateOneID(id uuid.UUID) *RecordCompanyUpdateOne {
+	mutation := newRecordCompanyMutation(c.config, OpUpdateOne, withRecordCompanyID(id))
+	return &RecordCompanyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RecordCompany.
+func (c *RecordCompanyClient) Delete() *RecordCompanyDelete {
+	mutation := newRecordCompanyMutation(c.config, OpDelete)
+	return &RecordCompanyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RecordCompanyClient) DeleteOne(rc *RecordCompany) *RecordCompanyDeleteOne {
+	return c.DeleteOneID(rc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RecordCompanyClient) DeleteOneID(id uuid.UUID) *RecordCompanyDeleteOne {
+	builder := c.Delete().Where(recordcompany.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RecordCompanyDeleteOne{builder}
+}
+
+// Query returns a query builder for RecordCompany.
+func (c *RecordCompanyClient) Query() *RecordCompanyQuery {
+	return &RecordCompanyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRecordCompany},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a RecordCompany entity by its id.
+func (c *RecordCompanyClient) Get(ctx context.Context, id uuid.UUID) (*RecordCompany, error) {
+	return c.Query().Where(recordcompany.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RecordCompanyClient) GetX(ctx context.Context, id uuid.UUID) *RecordCompany {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryArtists queries the artists edge of a RecordCompany.
+func (c *RecordCompanyClient) QueryArtists(rc *RecordCompany) *ArtistQuery {
+	query := (&ArtistClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(recordcompany.Table, recordcompany.FieldID, id),
+			sqlgraph.To(artist.Table, artist.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, recordcompany.ArtistsTable, recordcompany.ArtistsColumn),
+		)
+		fromV = sqlgraph.Neighbors(rc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RecordCompanyClient) Hooks() []Hook {
+	return c.hooks.RecordCompany
+}
+
+// Interceptors returns the client interceptors.
+func (c *RecordCompanyClient) Interceptors() []Interceptor {
+	return c.inters.RecordCompany
+}
+
+func (c *RecordCompanyClient) mutate(ctx context.Context, m *RecordCompanyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RecordCompanyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RecordCompanyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RecordCompanyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RecordCompanyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown RecordCompany mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Artist, Contact []ent.Hook
+		Artist, Contact, RecordCompany []ent.Hook
 	}
 	inters struct {
-		Artist, Contact []ent.Interceptor
+		Artist, Contact, RecordCompany []ent.Interceptor
 	}
 )

@@ -5,6 +5,7 @@ package ent
 import (
 	"SoftwareGoDay2/ent/artist"
 	"SoftwareGoDay2/ent/contact"
+	"SoftwareGoDay2/ent/recordcompany"
 	"context"
 	"errors"
 	"fmt"
@@ -64,6 +65,25 @@ func (ac *ArtistCreate) SetNillableContactID(id *uuid.UUID) *ArtistCreate {
 // SetContact sets the "contact" edge to the Contact entity.
 func (ac *ArtistCreate) SetContact(c *Contact) *ArtistCreate {
 	return ac.SetContactID(c.ID)
+}
+
+// SetRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by ID.
+func (ac *ArtistCreate) SetRecordcompaniesID(id uuid.UUID) *ArtistCreate {
+	ac.mutation.SetRecordcompaniesID(id)
+	return ac
+}
+
+// SetNillableRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by ID if the given value is not nil.
+func (ac *ArtistCreate) SetNillableRecordcompaniesID(id *uuid.UUID) *ArtistCreate {
+	if id != nil {
+		ac = ac.SetRecordcompaniesID(*id)
+	}
+	return ac
+}
+
+// SetRecordcompanies sets the "recordcompanies" edge to the RecordCompany entity.
+func (ac *ArtistCreate) SetRecordcompanies(r *RecordCompany) *ArtistCreate {
+	return ac.SetRecordcompaniesID(r.ID)
 }
 
 // Mutation returns the ArtistMutation object of the builder.
@@ -172,6 +192,23 @@ func (ac *ArtistCreate) createSpec() (*Artist, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.RecordcompaniesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   artist.RecordcompaniesTable,
+			Columns: []string{artist.RecordcompaniesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(recordcompany.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.record_company_artists = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

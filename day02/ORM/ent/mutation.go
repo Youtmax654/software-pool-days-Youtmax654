@@ -6,6 +6,7 @@ import (
 	"SoftwareGoDay2/ent/artist"
 	"SoftwareGoDay2/ent/contact"
 	"SoftwareGoDay2/ent/predicate"
+	"SoftwareGoDay2/ent/recordcompany"
 	"context"
 	"errors"
 	"fmt"
@@ -25,24 +26,27 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeArtist  = "Artist"
-	TypeContact = "Contact"
+	TypeArtist        = "Artist"
+	TypeContact       = "Contact"
+	TypeRecordCompany = "RecordCompany"
 )
 
 // ArtistMutation represents an operation that mutates the Artist nodes in the graph.
 type ArtistMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *uuid.UUID
-	name           *string
-	nationality    *string
-	clearedFields  map[string]struct{}
-	contact        *uuid.UUID
-	clearedcontact bool
-	done           bool
-	oldValue       func(context.Context) (*Artist, error)
-	predicates     []predicate.Artist
+	op                     Op
+	typ                    string
+	id                     *uuid.UUID
+	name                   *string
+	nationality            *string
+	clearedFields          map[string]struct{}
+	contact                *uuid.UUID
+	clearedcontact         bool
+	recordcompanies        *uuid.UUID
+	clearedrecordcompanies bool
+	done                   bool
+	oldValue               func(context.Context) (*Artist, error)
+	predicates             []predicate.Artist
 }
 
 var _ ent.Mutation = (*ArtistMutation)(nil)
@@ -260,6 +264,45 @@ func (m *ArtistMutation) ResetContact() {
 	m.clearedcontact = false
 }
 
+// SetRecordcompaniesID sets the "recordcompanies" edge to the RecordCompany entity by id.
+func (m *ArtistMutation) SetRecordcompaniesID(id uuid.UUID) {
+	m.recordcompanies = &id
+}
+
+// ClearRecordcompanies clears the "recordcompanies" edge to the RecordCompany entity.
+func (m *ArtistMutation) ClearRecordcompanies() {
+	m.clearedrecordcompanies = true
+}
+
+// RecordcompaniesCleared reports if the "recordcompanies" edge to the RecordCompany entity was cleared.
+func (m *ArtistMutation) RecordcompaniesCleared() bool {
+	return m.clearedrecordcompanies
+}
+
+// RecordcompaniesID returns the "recordcompanies" edge ID in the mutation.
+func (m *ArtistMutation) RecordcompaniesID() (id uuid.UUID, exists bool) {
+	if m.recordcompanies != nil {
+		return *m.recordcompanies, true
+	}
+	return
+}
+
+// RecordcompaniesIDs returns the "recordcompanies" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RecordcompaniesID instead. It exists only for internal usage by the builders.
+func (m *ArtistMutation) RecordcompaniesIDs() (ids []uuid.UUID) {
+	if id := m.recordcompanies; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRecordcompanies resets all changes to the "recordcompanies" edge.
+func (m *ArtistMutation) ResetRecordcompanies() {
+	m.recordcompanies = nil
+	m.clearedrecordcompanies = false
+}
+
 // Where appends a list predicates to the ArtistMutation builder.
 func (m *ArtistMutation) Where(ps ...predicate.Artist) {
 	m.predicates = append(m.predicates, ps...)
@@ -410,9 +453,12 @@ func (m *ArtistMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ArtistMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.contact != nil {
 		edges = append(edges, artist.EdgeContact)
+	}
+	if m.recordcompanies != nil {
+		edges = append(edges, artist.EdgeRecordcompanies)
 	}
 	return edges
 }
@@ -425,13 +471,17 @@ func (m *ArtistMutation) AddedIDs(name string) []ent.Value {
 		if id := m.contact; id != nil {
 			return []ent.Value{*id}
 		}
+	case artist.EdgeRecordcompanies:
+		if id := m.recordcompanies; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ArtistMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -443,9 +493,12 @@ func (m *ArtistMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ArtistMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedcontact {
 		edges = append(edges, artist.EdgeContact)
+	}
+	if m.clearedrecordcompanies {
+		edges = append(edges, artist.EdgeRecordcompanies)
 	}
 	return edges
 }
@@ -456,6 +509,8 @@ func (m *ArtistMutation) EdgeCleared(name string) bool {
 	switch name {
 	case artist.EdgeContact:
 		return m.clearedcontact
+	case artist.EdgeRecordcompanies:
+		return m.clearedrecordcompanies
 	}
 	return false
 }
@@ -467,6 +522,9 @@ func (m *ArtistMutation) ClearEdge(name string) error {
 	case artist.EdgeContact:
 		m.ClearContact()
 		return nil
+	case artist.EdgeRecordcompanies:
+		m.ClearRecordcompanies()
+		return nil
 	}
 	return fmt.Errorf("unknown Artist unique edge %s", name)
 }
@@ -477,6 +535,9 @@ func (m *ArtistMutation) ResetEdge(name string) error {
 	switch name {
 	case artist.EdgeContact:
 		m.ResetContact()
+		return nil
+	case artist.EdgeRecordcompanies:
+		m.ResetRecordcompanies()
 		return nil
 	}
 	return fmt.Errorf("unknown Artist edge %s", name)
@@ -933,4 +994,429 @@ func (m *ContactMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Contact edge %s", name)
+}
+
+// RecordCompanyMutation represents an operation that mutates the RecordCompany nodes in the graph.
+type RecordCompanyMutation struct {
+	config
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	name           *string
+	clearedFields  map[string]struct{}
+	artists        map[uuid.UUID]struct{}
+	removedartists map[uuid.UUID]struct{}
+	clearedartists bool
+	done           bool
+	oldValue       func(context.Context) (*RecordCompany, error)
+	predicates     []predicate.RecordCompany
+}
+
+var _ ent.Mutation = (*RecordCompanyMutation)(nil)
+
+// recordcompanyOption allows management of the mutation configuration using functional options.
+type recordcompanyOption func(*RecordCompanyMutation)
+
+// newRecordCompanyMutation creates new mutation for the RecordCompany entity.
+func newRecordCompanyMutation(c config, op Op, opts ...recordcompanyOption) *RecordCompanyMutation {
+	m := &RecordCompanyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeRecordCompany,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withRecordCompanyID sets the ID field of the mutation.
+func withRecordCompanyID(id uuid.UUID) recordcompanyOption {
+	return func(m *RecordCompanyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *RecordCompany
+		)
+		m.oldValue = func(ctx context.Context) (*RecordCompany, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().RecordCompany.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withRecordCompany sets the old RecordCompany of the mutation.
+func withRecordCompany(node *RecordCompany) recordcompanyOption {
+	return func(m *RecordCompanyMutation) {
+		m.oldValue = func(context.Context) (*RecordCompany, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m RecordCompanyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m RecordCompanyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of RecordCompany entities.
+func (m *RecordCompanyMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *RecordCompanyMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *RecordCompanyMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().RecordCompany.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *RecordCompanyMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *RecordCompanyMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the RecordCompany entity.
+// If the RecordCompany object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RecordCompanyMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *RecordCompanyMutation) ResetName() {
+	m.name = nil
+}
+
+// AddArtistIDs adds the "artists" edge to the Artist entity by ids.
+func (m *RecordCompanyMutation) AddArtistIDs(ids ...uuid.UUID) {
+	if m.artists == nil {
+		m.artists = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.artists[ids[i]] = struct{}{}
+	}
+}
+
+// ClearArtists clears the "artists" edge to the Artist entity.
+func (m *RecordCompanyMutation) ClearArtists() {
+	m.clearedartists = true
+}
+
+// ArtistsCleared reports if the "artists" edge to the Artist entity was cleared.
+func (m *RecordCompanyMutation) ArtistsCleared() bool {
+	return m.clearedartists
+}
+
+// RemoveArtistIDs removes the "artists" edge to the Artist entity by IDs.
+func (m *RecordCompanyMutation) RemoveArtistIDs(ids ...uuid.UUID) {
+	if m.removedartists == nil {
+		m.removedartists = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.artists, ids[i])
+		m.removedartists[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedArtists returns the removed IDs of the "artists" edge to the Artist entity.
+func (m *RecordCompanyMutation) RemovedArtistsIDs() (ids []uuid.UUID) {
+	for id := range m.removedartists {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ArtistsIDs returns the "artists" edge IDs in the mutation.
+func (m *RecordCompanyMutation) ArtistsIDs() (ids []uuid.UUID) {
+	for id := range m.artists {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetArtists resets all changes to the "artists" edge.
+func (m *RecordCompanyMutation) ResetArtists() {
+	m.artists = nil
+	m.clearedartists = false
+	m.removedartists = nil
+}
+
+// Where appends a list predicates to the RecordCompanyMutation builder.
+func (m *RecordCompanyMutation) Where(ps ...predicate.RecordCompany) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the RecordCompanyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *RecordCompanyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.RecordCompany, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *RecordCompanyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *RecordCompanyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (RecordCompany).
+func (m *RecordCompanyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *RecordCompanyMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.name != nil {
+		fields = append(fields, recordcompany.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *RecordCompanyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case recordcompany.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *RecordCompanyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case recordcompany.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown RecordCompany field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *RecordCompanyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case recordcompany.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown RecordCompany field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *RecordCompanyMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *RecordCompanyMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *RecordCompanyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown RecordCompany numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *RecordCompanyMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *RecordCompanyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *RecordCompanyMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown RecordCompany nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *RecordCompanyMutation) ResetField(name string) error {
+	switch name {
+	case recordcompany.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown RecordCompany field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *RecordCompanyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.artists != nil {
+		edges = append(edges, recordcompany.EdgeArtists)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *RecordCompanyMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case recordcompany.EdgeArtists:
+		ids := make([]ent.Value, 0, len(m.artists))
+		for id := range m.artists {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *RecordCompanyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.removedartists != nil {
+		edges = append(edges, recordcompany.EdgeArtists)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *RecordCompanyMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case recordcompany.EdgeArtists:
+		ids := make([]ent.Value, 0, len(m.removedartists))
+		for id := range m.removedartists {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *RecordCompanyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedartists {
+		edges = append(edges, recordcompany.EdgeArtists)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *RecordCompanyMutation) EdgeCleared(name string) bool {
+	switch name {
+	case recordcompany.EdgeArtists:
+		return m.clearedartists
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *RecordCompanyMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown RecordCompany unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *RecordCompanyMutation) ResetEdge(name string) error {
+	switch name {
+	case recordcompany.EdgeArtists:
+		m.ResetArtists()
+		return nil
+	}
+	return fmt.Errorf("unknown RecordCompany edge %s", name)
 }

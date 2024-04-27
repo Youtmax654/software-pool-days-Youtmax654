@@ -13,12 +13,21 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "name", Type: field.TypeString},
 		{Name: "nationality", Type: field.TypeString},
+		{Name: "record_company_artists", Type: field.TypeUUID, Nullable: true},
 	}
 	// ArtistsTable holds the schema information for the "artists" table.
 	ArtistsTable = &schema.Table{
 		Name:       "artists",
 		Columns:    ArtistsColumns,
 		PrimaryKey: []*schema.Column{ArtistsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "artists_record_companies_artists",
+				Columns:    []*schema.Column{ArtistsColumns[3]},
+				RefColumns: []*schema.Column{RecordCompaniesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// ContactsColumns holds the columns for the "contacts" table.
 	ContactsColumns = []*schema.Column{
@@ -41,13 +50,26 @@ var (
 			},
 		},
 	}
+	// RecordCompaniesColumns holds the columns for the "record_companies" table.
+	RecordCompaniesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+	}
+	// RecordCompaniesTable holds the schema information for the "record_companies" table.
+	RecordCompaniesTable = &schema.Table{
+		Name:       "record_companies",
+		Columns:    RecordCompaniesColumns,
+		PrimaryKey: []*schema.Column{RecordCompaniesColumns[0]},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ArtistsTable,
 		ContactsTable,
+		RecordCompaniesTable,
 	}
 )
 
 func init() {
+	ArtistsTable.ForeignKeys[0].RefTable = RecordCompaniesTable
 	ContactsTable.ForeignKeys[0].RefTable = ArtistsTable
 }

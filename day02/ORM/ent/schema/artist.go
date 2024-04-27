@@ -25,5 +25,6 @@ func (Artist) Fields() []ent.Field {
 func (Artist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("contact", Contact.Type).Unique(),
+		edge.From("recordcompanies", RecordCompany.Type).Ref("artists").Unique(),
 	}
 }

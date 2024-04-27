@@ -16,6 +16,8 @@ type Tx struct {
 	Artist *ArtistClient
 	// Contact is the client for interacting with the Contact builders.
 	Contact *ContactClient
+	// RecordCompany is the client for interacting with the RecordCompany builders.
+	RecordCompany *RecordCompanyClient
 
 	// lazily loaded.
 	client     *Client
@@ -149,6 +151,7 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Artist = NewArtistClient(tx.config)
 	tx.Contact = NewContactClient(tx.config)
+	tx.RecordCompany = NewRecordCompanyClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
