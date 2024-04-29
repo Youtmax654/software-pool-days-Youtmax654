@@ -17,6 +17,7 @@ func ApplyRoutes(router *gin.Engine) {
 	router.GET("/repeat-my-header", repeatMyHeader)
 	router.GET("/repeat-my-cookie", repeatMyCookie)
 	router.GET("/health", health)
+	router.GET("/repeat-all-my-queries", repeatAllMyQueries)
 }
 
 func hello(c *gin.Context) {
@@ -76,4 +77,22 @@ func repeatMyCookie(c *gin.Context) {
 
 func health(c *gin.Context) {
 	c.Status(http.StatusOK)
+}
+
+func repeatAllMyQueries(c *gin.Context) {
+	type Query struct {
+		Key string `json:"key"`
+		Value string `json:"value"`
+	}
+
+	queries := c.Request.URL.Query()
+	if len(queries) == 0 {
+		c.Status(http.StatusBadRequest)
+	} else {
+		var queriesList []Query
+		for key, value := range queries {
+			queriesList = append(queriesList, Query{Key: key, Value: value[0]})
+		}
+		c.JSON(http.StatusOK, queriesList)
+	}
 }
