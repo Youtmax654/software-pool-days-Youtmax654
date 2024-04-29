@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"SoftwareGoDay3/middlewares"
 	"io"
 	"log"
 	"net/http"
@@ -10,21 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ApplyRoutes(router *gin.Engine) {
-	router.GET("/hello", hello)
-	router.GET("/repeat-my-query", repeatMyQuery)
-	router.GET("/repeat-my-param/:message", repeatMyParam)
-	router.POST("/repeat-my-body", repeatMyBody)
-	router.GET("/repeat-my-header", repeatMyHeader)
-	router.GET("/repeat-my-cookie", repeatMyCookie)
-	router.GET("/health", health)
-	router.GET("/repeat-all-my-queries", repeatAllMyQueries)
-	// router.POST("/are-these-palindromes", areThesePalindromes)
-	router.POST("/are-these-palindromes", middlewares.CheckPalindrome(), areThesePalindromes)
-}
-
-func hello(c *gin.Context) {
-	c.String(http.StatusOK, "world")
+func applyRepeat(r *gin.Engine) {
+	r.GET("/repeat-my-query", repeatMyQuery)
+	r.GET("/repeat-my-param/:message", repeatMyParam)
+	r.POST("/repeat-my-body", repeatMyBody)
+	r.GET("/repeat-my-header", repeatMyHeader)
+	r.GET("/repeat-my-cookie", repeatMyCookie)
+	r.GET("/repeat-all-my-queries", repeatAllMyQueries)
 }
 
 func repeatMyQuery(c *gin.Context) {
@@ -78,10 +69,6 @@ func repeatMyCookie(c *gin.Context) {
 	}
 }
 
-func health(c *gin.Context) {
-	c.Status(http.StatusOK)
-}
-
 func repeatAllMyQueries(c *gin.Context) {
 	type Query struct {
 		Key string `json:"key"`
@@ -98,31 +85,4 @@ func repeatAllMyQueries(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, queriesList)
 	}
-}
-
-// Structure for our returned JSON
-type PalindromeResponse struct {
-    Input  string `json:"input"`
-    Result bool   `json:"result"`
-}  
-// Helper function to check a single string
-func isPalindrome(input string) bool {
-    size := len(input)
-    stop := size / 2
-    for i := 0; i < stop; i++ {
-        if input[i] != input[size-i-1] {
-            return false
-        }
-    }
-    return true
-}  
-// Main function
-func areThesePalindromes(c *gin.Context) {
-		inputs := c.MustGet("inputs").([]string)
-
-    palindromes := make([]PalindromeResponse, len(inputs))
-    for idx, input := range inputs {
-        palindromes[idx] = PalindromeResponse{Input: input, Result: isPalindrome(input)}
-    }
-    c.JSON(http.StatusOK, palindromes)
 }
