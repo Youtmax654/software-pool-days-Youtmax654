@@ -16,6 +16,7 @@ func ApplyRoutes(router *gin.Engine) {
 	router.POST("/repeat-my-body", repeatMyBody)
 	router.GET("/repeat-my-header", repeatMyHeader)
 	router.GET("/repeat-my-cookie", repeatMyCookie)
+	router.GET("/health", health)
 }
 
 func hello(c *gin.Context) {
@@ -71,4 +72,8 @@ func repeatMyCookie(c *gin.Context) {
 	} else {
 		c.String(http.StatusOK, message)
 	}
+}
+
+func health(c *gin.Context) {
+	c.Status(http.StatusOK)
 }
