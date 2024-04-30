@@ -13,4 +13,4 @@ jobs:
       Event: ${{ github.event_name }}
     steps:
       - name: Display a greeting
-        run: echo "Hi from GitHub Action, I'm running on $OS and I was triggered by <USER> on the <EVENT> event!"
+        run: echo "Hi from GitHub Action, I'm running on $OS and I was triggered by $User on the $Event event!"
