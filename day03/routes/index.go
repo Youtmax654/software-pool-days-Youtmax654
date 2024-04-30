@@ -9,5 +9,8 @@ func ApplyRoutes(r *gin.Engine) error {
     applyHello(r)
     applyRepeat(r)
     applyPalindrome(r)
+    applyRegister(r)
+    applyLogin(r)
+    applyMe(r)
     return nil
 }
