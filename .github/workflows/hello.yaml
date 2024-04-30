@@ -1,0 +1,16 @@
+name: Hello world
+on:
+  issue_comment:
+    types: [created]
+  push:
+
+jobs:
+  hello-world:
+    runs-on: ubuntu-22.04
+    env:
+      OS: ubuntu-22.04
+      User: ${{ github.actor }}
+      Event: ${{ github.event_name }}
+    steps:
+      - name: Display a greeting
+        run: echo "Hi from GitHub Action, I'm running on $OS and I was triggered by <USER> on the <EVENT> event!"
